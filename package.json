@@ -1,15 +1,11 @@
 {
-  "name": "your-app",
+  "name": "Queueu-tool",
   "description": "Description",
-  "author": "Your Name",
+  "author": "Tom van Ommeren",
   "version": "0.0.1",
   "repository": {
     "type": "git",
     "url": ""
-  },
-  "scripts": {
-    "start": "brunch watch --server",
-    "test": "brunch test"
   },
   "dependencies": {
     "auto-reload-brunch": ">= 1.0 < 1.8",
@@ -17,6 +13,11 @@
     "css-brunch": ">= 1.0 < 1.8",
     "javascript-brunch": ">= 1.0 < 1.8",
     "react-brunch": "^1.0.6",
-    "uglify-js-brunch": ">= 1.0 < 1.8"
+    "uglify-js-brunch": ">= 1.0 < 1.8",
+    "express": "4.x",
+    "amqplib": "",
+    "when": "",
+    "node-uuid": "",
+    "body-parser": ""
   }
 }

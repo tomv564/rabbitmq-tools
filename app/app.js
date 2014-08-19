@@ -1,6 +1,39 @@
 var QueueItemList = require("./queueitems");
 var Dispatcher = require("./dispatcher");
-var queue;
+var currentQueue;
+
+function setQueue(queue) {
+
+  currentQueue = queue;
+
+  router.navigate('peek/' + queue);
+	document.title = "Peek Queue: " + queue;
+  reload();
+}
+
+function reload() {
+	$.getJSON('/queues/' + currentQueue + '/items', null)
+		.done(showItems)
+		.fail(showItems.bind(undefined, null));
+}
+
+
+var Router = Backbone.Router.extend({
+
+  routes: {
+    "peek/:queue":        "peek",  
+  }
+
+});
+
+var router = new Router();
+
+router.on('route:peek', function(queue) {
+		$('input[name=queue]').val(queue);
+        setQueue(queue); 
+    });
+
+Backbone.history.start({pushState: true});
 
 
 function showItems(data) {
@@ -15,21 +48,12 @@ function itemRequeued() {
 	reload();
 }
 
-
-
-
-function reload() {
-	 var queue = $('input[name=queue]').val();
-	$.getJSON('http://localhost:3000/queues/' + queue + '/items', null).done(showItems);
-}
-
-//reload();
-
 $('form').on('submit', function(event) {
 
- event.preventDefault();
+	event.preventDefault();
+	var queue = $('input[name=queue]').val();
+	setQueue(queue);
 
- reload();
 });
 
 Dispatcher.on('requeue', function(item) {

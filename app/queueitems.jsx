@@ -8,7 +8,7 @@ var Dispatcher = require("./dispatcher");
 var QueueItemDisplay = React.createClass({
 	render: function() {
 		return (
-			<li className="queueitem row">
+			<li className="row">
 				<div className="col-xs-1">
 					{this.hasXDeath() ? 
 						<button type="button" className="btn btn-default" onClick={this.onClick}>Requeue</button> :
@@ -45,11 +45,15 @@ var QueueuItemList = React.createClass({
 
   render: function() { 
     
+
+      if (this.props.messages == null)
+      	return <div className="alert alert-danger">Queue does not exist</div>
+
       var listitems = this.props.messages.map(function(msg){
       	return <QueueItemDisplay item={msg}/>;
       });
-      return listitems.length > 0 ? <ul className="list-unstyled">{listitems}</ul> :
-      								<p>No items found</p>
+      return listitems.length > 0 ? <ul className="messages list-unstyled">{listitems}</ul> :
+      								<div className="alert alert-warning">No items found</div>
     
   } 
 

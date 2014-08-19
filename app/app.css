@@ -1,4 +1,16 @@
-li.queueitem {
+
+form {
+	margin-bottom: 10px;
+}
+h1 {
+	margin-bottom: 20px;
+}
+
+ul.messages {
+	
+}
+
+ul.messages li {
 	padding-top: 10px;
 	padding-bottom: 10px;
 	border-top: 1px solid #dddddd;
