@@ -1,5 +1,7 @@
 var express = require('express');
 var queues = require('./queues');
+var WebSocketServer = require("ws").Server;
+var http = require('http');
 var app = express();
 var port = process.env.PORT || 3000;
 
@@ -32,6 +34,24 @@ app.get('*', function(request, response){
   response.sendFile(__dirname + '/public/index.html');
 });
 
-var server = app.listen(port, function() {
-	console.log("Listening on port %d", port);
+
+var server = http.createServer(app);
+server.listen(port, function() {
+  console.log("Listening on port %d", port);
+});
+
+var wss = new WebSocketServer({server: server});
+console.log("websocket server created");
+
+wss.on("connection", function(ws) {
+  var id = setInterval(function() {
+    ws.send(JSON.stringify(new Date()), function() {  });
+  }, 1000);
+
+  console.log("websocket connection open");
+
+  ws.on("close", function() {
+    console.log("websocket connection close");
+    clearInterval(id);
+  });
 });
