@@ -11,6 +11,8 @@ app.use( bodyParser.json() );
 
 app.use(express.static(__dirname + '/public'));
 
+app.disable('etag');
+
 app.post('/requeue', function(req, res) {
 
 	queues.requeue(req.body.from, req.body.deliveryTag)
