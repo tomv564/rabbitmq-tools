@@ -31,6 +31,7 @@ var Router = Backbone.Router.extend({
 
   routes: {
     "peek/:queue":        "peek",  
+    "listen/:queue":"listen"
   }
 
 });

@@ -51,6 +51,27 @@ function peekChannel(queue, ch) {
  
 }
 
+function listenChannel(routingKey, callback, ch) {
+
+    var ok = ch.assertQueue('hello', {durable: true});
+    
+    return ok.then(function(_qok) {
+
+      return ch.consume('hello', function(msg) {
+        callback(msg.content.toString());
+      }, {noAck: false});
+
+    });
+
+  // var ok = ch.assertQueue('hello', {durable: true});
+  // ok = ok.then(function(created){
+  //   console.log(created.queue + 'created');
+    //ch.bindQueue(created.queue, '', routingKey);
+    //return ch.consume('hello', callback, {noAck: false});
+ // });
+  
+}
+
 function display() {
   console.log("Messages: %j", messages);
 }
@@ -142,7 +163,12 @@ if (!ch)
 					return true;
 				});
 
-		}
+		},
+    listen: function(routingKey, callback) {
+      return amqp.connect('amqp://localhost')
+          .then(createChannel)
+          .then(listenChannel.bind(undefined, routingKey, callback));
+    }
 	};
 }());
 
