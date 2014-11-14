@@ -55,7 +55,18 @@ var wss = new WebSocketServer({server: server});
 console.log("websocket server created");
 
 wss.on("connection", function(ws) {
-  queues.listen('hello', function(msg) { ws.send(JSON.stringify(msg)); });
+
+  console.log('url was: ' + ws.upgradeReq.url);
+
+  path = ws.upgradeReq.url;
+
+  exchange = '';
+  if (path && (path.substring(0,1) == '/'))
+    exchange = path.substring(1);
+
+  console.log(exchange);
+
+  queues.listen(exchange, function(msg) { ws.send(JSON.stringify(msg)); });
 
   // var id = setInterval(function() {
   //   ws.send(JSON.stringify(new Date()), function() {  });

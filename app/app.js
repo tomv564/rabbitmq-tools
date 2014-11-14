@@ -1,15 +1,27 @@
 var QueueItemList = require("./queueitems");
 var Dispatcher = require("./dispatcher");
 var currentQueue;
+var currentExchange;
 
 function setQueue(queue) {
 
   currentQueue = queue;
 
   router.navigate('manage/' + queue);
-  document.title = "Peek Queue: " + queue;
+  document.title = "Manage Queue: " + queue;
   
   reload();
+
+}
+
+function setListen(exchange) {
+
+	currentExchange = exchange;
+
+	router.navigate('listen/' + exchange);
+	document.title = "Listening: " + exchange;
+
+	listen();
 
 }
 
@@ -19,18 +31,22 @@ function reload() {
 		.fail(showItems.bind(undefined, null));
 }
 
-function startListening() {
+function listen() {
+	
 	var host = location.origin.replace(/^http/, 'ws');
+	
 	var data = [];
-      var ws = new WebSocket(host);
-      ws.onmessage = function (event) {
-        //var li = document.createElement('li');
-        //li.innerHTML = JSON.parse(event.data);
-        //document.querySelector('#pings').appendChild(li);
+	showItems([]);
+    
+    wsUrl = host + '/' + currentExchange;
+
+	var ws = new WebSocket(wsUrl);
+	ws.onmessage = function (event) {
+
 		data.push(JSON.parse(event.data));
 
 		showItems(data);      
-      };
+	};
 }
 
 var Router = Backbone.Router.extend({
@@ -42,14 +58,17 @@ var Router = Backbone.Router.extend({
 
 });
 
-$('button#purge').on('click', startListening);
-
 var router = new Router();
 
 router.on('route:manage', function(queue) {
 		$('input[name=queue]').val(queue);
         setQueue(queue); 
-    });
+});
+
+router.on('route:listen', function(exchange){
+		$('input[name=exchange]').val(exchange);
+		setListen(exchange);
+});
 
 Backbone.history.start({pushState: true});
 
@@ -78,7 +97,7 @@ $('form#listen').on('submit', function(event) {
 
 	event.preventDefault();
 	var exchange = $('input[name=exchange]').val();
-	console.log("todo: start listening to " + exchange);
+	setListen(exchange);
 
 });
 
@@ -92,8 +111,6 @@ Dispatcher.on('requeue', function(item) {
 		from: currentQueue,
 		to: item.properties.headers['x-death'][0].queue
 	};
-
-	//$.post('http://localhost:3000/requeue/', request).done(itemRequeued);
 
 	$.ajax({
 		type: "POST",

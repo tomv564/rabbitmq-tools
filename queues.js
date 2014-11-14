@@ -52,24 +52,14 @@ function peekChannel(queue, ch) {
  
 }
 
-function listenChannel(routingKey, callback, ch) {
+function listenChannel(exchange, callback, ch) {
 
-    var ok = ch.assertQueue('hello', {durable: true});
-    
-    return ok.then(function(_qok) {
-
-      return ch.consume('hello', function(msg) {
-        callback(msg.content.toString());
-      }, {noAck: false});
-
-    });
-
-  // var ok = ch.assertQueue('hello', {durable: true});
-  // ok = ok.then(function(created){
-  //   console.log(created.queue + 'created');
-    //ch.bindQueue(created.queue, '', routingKey);
-    //return ch.consume('hello', callback, {noAck: false});
- // });
+  return when.all([
+      ch.assertQueue('_listener', {autodelete: true}),
+      //ch.assertExchange(exchange, 'topic'),
+      ch.bindQueue('_listener', exchange, '#'),
+      ch.consume('_listener', function(msg) { callback(parse(msg));}, {noAck: true})
+    ]);
   
 }
 
@@ -82,7 +72,6 @@ function disconnect() {
   return connection.close();
   
 }
-
 
 function redeliver(content, exchange, routingkey) {
 
@@ -185,10 +174,10 @@ if (!ch)
           return true;
         });
     },
-    listen: function(routingKey, callback) {
+    listen: function(exchange, callback) {
       return amqp.connect(amqpUri)
           .then(createChannel)
-          .then(listenChannel.bind(undefined, routingKey, callback));
+          .then(listenChannel.bind(undefined, exchange, callback));
     }
 	};
 }());
