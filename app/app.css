@@ -15,3 +15,7 @@ ul.messages li {
 	padding-bottom: 10px;
 	border-top: 1px solid #dddddd;
 }
+
+pre.content {
+	font-size: smaller;
+}

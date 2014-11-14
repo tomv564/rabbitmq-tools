@@ -4,6 +4,7 @@ var messages = [];
 var amqp = require('amqplib');
 var when = require('when');
 
+var amqpUri = process.env.AMQP_URI || 'amqp://localhost';
 
 // handle shutdown
 // process.once('SIGINT', function() { 
@@ -51,6 +52,17 @@ function peekChannel(queue, ch) {
  
 }
 
+function listenChannel(exchange, callback, ch) {
+
+  return when.all([
+      ch.assertQueue('_listener', {autodelete: true}),
+      //ch.assertExchange(exchange, 'topic'),
+      ch.bindQueue('_listener', exchange, '#'),
+      ch.consume('_listener', function(msg) { callback(parse(msg));}, {noAck: true})
+    ]);
+  
+}
+
 function display() {
   console.log("Messages: %j", messages);
 }
@@ -60,7 +72,6 @@ function disconnect() {
   return connection.close();
   
 }
-
 
 function redeliver(content, exchange, routingkey) {
 
@@ -75,7 +86,7 @@ function publish(content, exchange, routingkey, ch) {
    return ch.close();
 }
 
-function checkmsg(tag, queue, ch, msg) {
+function checkmsg(tag, queue, ch, operation, msg) {
   if (!msg) {
     console.log(" no message returned!");
     return;
@@ -85,42 +96,52 @@ function checkmsg(tag, queue, ch, msg) {
     
     console.log("found the message!");
 
+    return handleMessage(ch, queue, msg, operation);
+
+  } else {
+
+    console.log("looking some more, tag was " + msg.fields.deliveryTag);
+    return seek(tag, queue, operation, ch);
+  }
+
+}
+
+function handleMessage(ch, queue, msg, operation) {
+
     var content = msg.content.toString();
     var exchange = msg.properties.headers['x-death'][0].exchange;
     var routingkey = msg.properties.headers['x-death'][0]['routing-keys'][0];
 
     ch.ack(msg);
-    console.log("acked, now resending");
 
-    return redeliver(content, exchange, routingkey);
+    console.log("acked");
+  
+    if (operation == 'requeue')
+      return redeliver(content, exchange, routingkey);
               //.then(seek.bind(undefined, tag, queue, ch));
 
-} else{
-
-    console.log("looking some more, tag was " + msg.fields.deliveryTag);
-    return seek(tag, queue, ch);
-  }
-
+    return ch.get(queue);
 }
 
-function seek(tag, queue, ch) {
+function seek(tag, queue, operation, ch) {
 
 
  console.log('checking queue ' + queue + ' for tag ' + tag);
 
 
 if (!ch)
-	console.log("ch is undefined!")
+	console.log("ch is undefined!");
  
   return ch.get(queue, {noAck: false})
-     .then(checkmsg.bind(undefined, tag, queue, ch));
+     .then(checkmsg.bind(undefined, tag, queue, ch, operation));
  
 }
 
 	return {
 		peek: function(queue) {
+      console.log('peeking queue ' + queue + ' on ' + amqpUri);
 
-			return amqp.connect('amqp://localhost')
+      return amqp.connect(amqpUri)
 				.then(createChannel)
 				.then(peekChannel.bind(undefined, queue))
 				.then(disconnect)
@@ -133,20 +154,32 @@ if (!ch)
 		},
 		requeue: function(queue, deliveryTag) {
 
-			return amqp.connect('amqp://localhost')
+			return amqp.connect(amqpUri)
 				.then(createChannel)
-				.then(seek.bind(undefined, deliveryTag, queue))
+				.then(seek.bind(undefined, deliveryTag, queue, 'requeue'))
 				.then(disconnect)
 				.then(function() {
 					console.log('done requeueing');
 					return true;
 				});
 
-		}
+		},
+    delete: function(queue, deliveryTag) {
+      return amqp.connect(amqpUri)
+        .then(createChannel)
+        .then(seek.bind(undefined, deliveryTag, queue, 'delete'))
+        .then(disconnect)
+        .then(function() {
+          console.log('done deleting');
+          return true;
+        });
+    },
+    listen: function(exchange, callback) {
+      return amqp.connect(amqpUri)
+          .then(createChannel)
+          .then(listenChannel.bind(undefined, exchange, callback));
+    }
 	};
 }());
-
-
-
 
 module.exports =  queues;
