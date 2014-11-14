@@ -9,12 +9,12 @@ var QueueItemDisplay = React.createClass({
 	render: function() {
 		return (
 			<li className="row">
-				<div className="col-xs-1">
-					{this.hasXDeath() ? 
-						<button type="button" className="btn btn-default" onClick={this.onClick}>Requeue</button> :
-						<p></p> }
-				</div>
-				<div className="col-xs-3">
+
+				<div className="col-xs-8">
+			 		<pre className="content">{this.getContent()}</pre>
+			 	</div>
+
+			 	<div className="col-xs-3">
 					
 					{this.hasXDeath() ? 
 						<p>
@@ -25,17 +25,34 @@ var QueueItemDisplay = React.createClass({
 						: <p></p>}
 					
 				</div>
-				<div className="col-xs-8">
-			 		<pre>{this.props.item.content}</pre>
-			 	</div>
+				<div className="col-xs-1">
+					{this.hasXDeath() ? 
+						<div className="btn-group-vertical btn-group-sm" role="group" aria-label="...">
+							<button type="button" className="btn btn-default" onClick={this.onRequeue}>Requeue</button>
+							<button type="button" className="btn btn-danger" onClick={this.onDelete}>Delete</button>
+						</div> :
+						<p></p> }
+				</div>
 			 </li>
 			);
 	},
-	onClick: function(event) {
+	onRequeue: function(event) {
 		Dispatcher.trigger('requeue', this.props.item);
+	},
+	onDelete: function(event) {
+		Dispatcher.trigger('delete', this.props.item);
 	},
 	hasXDeath: function() {
 		return this.props.item.properties.headers['x-death'];
+	},
+	getContent: function() {
+		var json = null;
+		try{
+			json = JSON.parse(this.props.item.content);
+		} catch(e) {
+			return this.props.item.content;
+		}
+		return JSON.stringify(json, null, 2);
 	}
 
 

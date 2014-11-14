@@ -22,6 +22,17 @@ app.post('/requeue', function(req, res) {
 	
 });
 
+app.post('/delete', function(req, res) {
+
+  queues.delete(req.body.from, req.body.deliveryTag)
+        .then(function(whatever) {
+
+          res.status(204).end();
+
+        });
+  
+});
+
 app.get('/queues/:queue/items', function(req, res) {
 
   queues.peek(req.params.queue)

@@ -6,9 +6,11 @@ function setQueue(queue) {
 
   currentQueue = queue;
 
-  router.navigate('peek/' + queue);
-	document.title = "Peek Queue: " + queue;
+  router.navigate('manage/' + queue);
+  document.title = "Peek Queue: " + queue;
+  
   reload();
+
 }
 
 function reload() {
@@ -17,30 +19,34 @@ function reload() {
 		.fail(showItems.bind(undefined, null));
 }
 
-function startPinging() {
-var host = location.origin.replace(/^http/, 'ws')
+function startListening() {
+	var host = location.origin.replace(/^http/, 'ws');
+	var data = [];
       var ws = new WebSocket(host);
       ws.onmessage = function (event) {
-        var li = document.createElement('li');
-        li.innerHTML = JSON.parse(event.data);
-        document.querySelector('#pings').appendChild(li);
+        //var li = document.createElement('li');
+        //li.innerHTML = JSON.parse(event.data);
+        //document.querySelector('#pings').appendChild(li);
+		data.push(JSON.parse(event.data));
+
+		showItems(data);      
       };
 }
 
 var Router = Backbone.Router.extend({
 
   routes: {
-    "peek/:queue":        "peek",  
-    "listen/:queue":"listen"
+    "manage/:queue":        "manage",  
+    "listen/:exchange":      "listen"
   }
 
 });
 
-$('button#purge').on('click', startPinging);
+$('button#purge').on('click', startListening);
 
 var router = new Router();
 
-router.on('route:peek', function(queue) {
+router.on('route:manage', function(queue) {
 		$('input[name=queue]').val(queue);
         setQueue(queue); 
     });
@@ -55,16 +61,24 @@ function showItems(data) {
 	);
 }
 
-function itemRequeued() {
-	console.log("requeue done");
+function itemsChanged() {
+	console.log("item operation done");
 	reload();
 }
 
-$('form').on('submit', function(event) {
+$('form#manage').on('submit', function(event) {
 
 	event.preventDefault();
 	var queue = $('input[name=queue]').val();
 	setQueue(queue);
+
+});
+
+$('form#listen').on('submit', function(event) {
+
+	event.preventDefault();
+	var exchange = $('input[name=exchange]').val();
+	console.log("todo: start listening to " + exchange);
 
 });
 
@@ -75,7 +89,7 @@ Dispatcher.on('requeue', function(item) {
 
 	var request = {
 		deliveryTag: item.id,
-		from: 'dead',
+		from: currentQueue,
 		to: item.properties.headers['x-death'][0].queue
 	};
 
@@ -88,6 +102,27 @@ Dispatcher.on('requeue', function(item) {
 		data: JSON.stringify(request),
 		contentType: "application/json; charset=utf-8",
 		dataType: "json"
-	}).done(itemRequeued.bind(undefined, item.queue));
+	}).done(itemsChanged.bind(undefined, item.queue));
+
+});
+
+Dispatcher.on('delete', function(item) {
+	
+	console.log("Delete requested for: ");
+	console.log(item);
+
+	var request = {
+		deliveryTag: item.id,
+		from: currentQueue,
+	};
+
+	$.ajax({
+		type: "POST",
+		url: "http://localhost:3000/delete/",
+		// The key needs to match your method's input parameter (case-sensitive).
+		data: JSON.stringify(request),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json"
+	}).done(itemsChanged.bind(undefined, item.queue));
 
 });

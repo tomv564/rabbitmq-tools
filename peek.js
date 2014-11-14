@@ -37,7 +37,7 @@ function disconnect() {
 
 var connection = null;
 var messages = [];
-amqp.connect('amqp://localhost')
+amqp.connect('amqp://fonq.dev')
      .then(createChannel)
      .then(peek)
      .then(display)

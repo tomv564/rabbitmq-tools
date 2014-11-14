@@ -3,15 +3,18 @@
 var amqp = require('amqplib');
 var when = require('when');
 
-amqp.connect('amqp://localhost').then(function(conn) {
+amqp.connect('amqp://fonq.dev').then(function(conn) {
   return when(conn.createChannel().then(function(ch) {
-    var q = 'hello';
-    var msg = 'Hello World!';
+    var key = 'hello';
+    var msg = '{ "message" : "Hello World!", "details" : { "from" : "pants", "to" : "12345"}}';
 
-    var ok = ch.assertQueue(q, {durable: true});
+    //var msg = 'Hello World!';
+    var exchange = 'amq.topic';
+
+    var ok = ch.assertQueue(key, {durable: true});
     
     return ok.then(function(_qok) {
-      ch.sendToQueue(q, new Buffer(msg));
+      ch.publish(exchange, key, new Buffer(msg));
       console.log(" [x] Sent '%s'", msg);
       return ch.close();
     });

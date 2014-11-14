@@ -16,20 +16,23 @@
     <div class="container">
 
       <div>
-        <h1>Queue Peeker</h1>
+        <h1>AMQP Tools</h1>
 
-        <form class="form-inline">
+        <form id="manage" class="form-inline">
           <div class="form-group">
           <label class="sr-only" for="queue">Queue</label> <input name="queue" required type="text" class="form-control" placeholder="Enter a queue name"/> 
-          <input type="submit" class="form-control btn btn-primary" value="Go"/>
+          <input type="submit" class="form-control btn btn-primary" value="Manage"/>
           </div>
         </form>
+
+        <form id="listen" class="form-inline">
+          <div class="form-group">
+          <label class="sr-only" for="queue">Exchange</label> <input name="exchange" required type="text" class="form-control" placeholder="Enter an exchange name"/> 
+          <input type="submit" class="form-control btn btn-primary" value="Listen"/>
+          </div>
+        </form>
+
         <div id="component" class="container"></div>
-
-        
-        <button type="button" id="purge" class="btn btn-danger">Purge</button>
-
-        <ul id='pings'></ul>
 
       </div>
 
