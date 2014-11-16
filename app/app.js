@@ -73,7 +73,6 @@ router.on('route:listen', function(exchange){
 
 Backbone.history.start({pushState: true});
 
-
 function showItems(data) {
 	React.render(
 	  QueueItemList({messages: data}),

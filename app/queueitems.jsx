@@ -6,25 +6,23 @@ var QueueItemDisplay = React.createClass({
 		return (
 			<li className="row">
 
-				<div className="col-xs-8">
+				<div className="col-xs-12 col-sm-8">
 			 		<pre className="content">{this.getContent()}</pre>
 			 	</div>
 
-			 	<div className="col-xs-3">
-					<p>
-					<strong>Routing Key</strong>: {this.props.item.routingKey}
-
+			 	<div className="col-xs-6 col-sm-3">
+					
 					{this.hasXDeath() ? 
 						<p>
 							<strong>Time</strong>: {this.getTime()}<br/>
 							<strong>Queue</strong>: {this.props.item.properties.headers['x-death'][0].queue}<br/>
 							<strong>Exchange</strong>: {this.props.item.properties.headers['x-death'][0].exchange}<br/>
-							<strong>Routing keys</strong>: {this.props.item.properties.headers['x-death'][0]['routing-keys']}
+							<strong>Routing key</strong>: {this.props.item.properties.headers['x-death'][0]['routing-keys']}
 						</p>
-						: <p></p>}
-					</p>
+						: <p><strong>Routing key</strong>: {this.props.item.routingKey} </p> }
+
 				</div>
-				<div className="col-xs-1">
+				<div className="col-xs-6 col-sm-1">
 					{this.hasXDeath() ? 
 						<div className="btn-group-vertical btn-group-sm" role="group" aria-label="...">
 							<button type="button" className="btn btn-default" onClick={this.onRequeue}>Requeue</button>
@@ -74,7 +72,7 @@ var QueueuItemList = React.createClass({
       	return <div className="alert alert-danger">Queue does not exist</div>
 
       var listitems = this.props.messages.map(function(msg){
-      	return <QueueItemDisplay item={msg}/>;
+      	return <QueueItemDisplay key={msg.id} item={msg}/>;
       });
       return listitems.length > 0 ? <ul className="messages list-unstyled">{listitems}</ul> :
       								<div className="alert alert-warning">No items found</div>
