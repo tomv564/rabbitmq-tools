@@ -15,15 +15,18 @@ var QueueItemDisplay = React.createClass({
 			 	</div>
 
 			 	<div className="col-xs-3">
-					
+					<p>
+					<strong>Routing Key</strong>: {this.props.item.routingKey}
+
 					{this.hasXDeath() ? 
 						<p>
+							<strong>Time</strong>: {this.getTime()}<br/>
 							<strong>Queue</strong>: {this.props.item.properties.headers['x-death'][0].queue}<br/>
 							<strong>Exchange</strong>: {this.props.item.properties.headers['x-death'][0].exchange}<br/>
 							<strong>Routing keys</strong>: {this.props.item.properties.headers['x-death'][0]['routing-keys']}
 						</p>
 						: <p></p>}
-					
+					</p>
 				</div>
 				<div className="col-xs-1">
 					{this.hasXDeath() ? 
@@ -53,6 +56,23 @@ var QueueItemDisplay = React.createClass({
 			return this.props.item.content;
 		}
 		return JSON.stringify(json, null, 2);
+	},
+	getTime: function() {
+
+		var timestamp = this.props.item.properties.headers['x-death'][0].time.value;
+		var date = new Date(timestamp*1000);
+
+		return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+	  // var year = a.getFullYear();
+	  // var month = months[a.getMonth()];
+	  // var date = a.getDate();
+	  // var hour = a.getHours();
+	  // var min = a.getMinutes();
+	  // var sec = a.getSeconds();
+	  // var time = date + ',' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+	  // return time;
+
 	}
 
 

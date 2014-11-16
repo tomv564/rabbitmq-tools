@@ -39,7 +39,8 @@ function parse(msg) {
 		id: msg.fields.deliveryTag,
 		routingKey: msg.fields.routingKey,
 		properties: msg.properties,
-		content: msg.content.toString()
+		content: msg.content.toString(),
+    timestamp: msg.timestamp
 	};
 }
 
