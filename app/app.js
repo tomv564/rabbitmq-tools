@@ -1,7 +1,8 @@
-var QueueItemList = require("./queueitems");
 var Dispatcher = require("./dispatcher");
+var QueueItemList = React.createFactory(require('./queueitems'));
 var currentQueue;
 var currentExchange;
+
 
 function setQueue(queue) {
 
@@ -74,7 +75,7 @@ Backbone.history.start({pushState: true});
 
 
 function showItems(data) {
-	React.renderComponent(
+	React.render(
 	  QueueItemList({messages: data}),
 	  document.getElementById('component')
 	);
@@ -114,7 +115,7 @@ Dispatcher.on('requeue', function(item) {
 
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:3000/requeue/",
+		url: location.origin + "/requeue/",
 		// The key needs to match your method's input parameter (case-sensitive).
 		data: JSON.stringify(request),
 		contentType: "application/json; charset=utf-8",
@@ -135,7 +136,7 @@ Dispatcher.on('delete', function(item) {
 
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:3000/delete/",
+		url: location.origin + "/delete/",
 		// The key needs to match your method's input parameter (case-sensitive).
 		data: JSON.stringify(request),
 		contentType: "application/json; charset=utf-8",
