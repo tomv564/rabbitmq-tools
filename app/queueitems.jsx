@@ -46,7 +46,7 @@ var QueueItemDisplay = React.createClass({
 		Dispatcher.trigger('delete', this.props.item);
 	},
 	hasXDeath: function() {
-		return this.props.item.properties.headers['x-death'];
+		return this.props.item.properties.headers && this.props.item.properties.headers['x-death'];
 	},
 	getContent: function() {
 		var json = null;
@@ -63,15 +63,6 @@ var QueueItemDisplay = React.createClass({
 		var date = new Date(timestamp*1000);
 
 		return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-
-	  // var year = a.getFullYear();
-	  // var month = months[a.getMonth()];
-	  // var date = a.getDate();
-	  // var hour = a.getHours();
-	  // var min = a.getMinutes();
-	  // var sec = a.getSeconds();
-	  // var time = date + ',' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-	  // return time;
 
 	}
 
