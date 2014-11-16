@@ -6,7 +6,9 @@ var when = require('when');
 amqp.connect('amqp://fonq.dev').then(function(conn) {
   return when(conn.createChannel().then(function(ch) {
     var key = 'hello';
-    var msg = '{ "message" : "Hello World!", "details" : { "from" : "pants", "to" : "12345"}}';
+    
+    var msg = 'Hello' + process.argv[2];
+    //var msg = '{ "message" : "Hello World!", "details" : { "from" : "pants", "to" : "12345"}}';
 
     //var msg = 'Hello World!';
     var exchange = 'amq.topic';

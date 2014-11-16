@@ -1,6 +1,5 @@
 var queues = (function () {
 
-var messages = [];
 var amqp = require('amqplib');
 var when = require('when');
 
@@ -21,17 +20,18 @@ function createChannel(conn) {
   conn.on('error', function (err) {
   	console.log(err);
   });
-  messages = [];
   return conn.createChannel();
 
 }
 
-function collect(ch, queue, msg) {
-  
-  if (msg) {
-    messages.push(parse(msg));
-    return peekChannel(queue, ch);
-  } 
+function iterate(queue, callback, ch) {
+
+  return when.iterate(function() { return ch.get(queue); }, 
+    function(msg) { return msg === false; },
+    callback,
+    undefined
+    );
+
 }
 
 function parse(msg) {
@@ -44,28 +44,14 @@ function parse(msg) {
 	};
 }
 
-function peekChannel(queue, ch) {
-  
-  console.log("getting messages");
-  
-  return ch.get(queue)
-           .then(collect.bind(undefined, ch, queue));
- 
-}
 
-function listenChannel(exchange, callback, ch) {
+function listen(exchange, callback, ch) {
 
-  return when.all([
-      ch.assertQueue('_listener', {autodelete: true}),
-      //ch.assertExchange(exchange, 'topic'),
-      ch.bindQueue('_listener', exchange, '#'),
-      ch.consume('_listener', function(msg) { callback(parse(msg));}, {noAck: true})
-    ]);
-  
-}
-
-function display() {
-  console.log("Messages: %j", messages);
+  return ch.assertQueue(null, {autodelete: true})
+             .then(function(ok) { 
+                ch.bindQueue(ok.queue, exchange, '#'); 
+                return ch.consume(ok.queue, function(msg) { callback(parse(msg));}, {noAck: true});
+              });
 }
 
 function disconnect() {
@@ -87,27 +73,18 @@ function publish(content, exchange, routingkey, ch) {
    return ch.close();
 }
 
-function checkmsg(tag, queue, ch, operation, msg) {
-  if (!msg) {
-    console.log(" no message returned!");
-    return;
-  }
 
-  if (msg.fields.deliveryTag == tag) {
-    
-    console.log("found the message!");
+function ackIfMatches(ch, deliveryTag, msg) {
 
-    return handleMessage(ch, queue, msg, operation);
-
-  } else {
-
-    console.log("looking some more, tag was " + msg.fields.deliveryTag);
-    return seek(tag, queue, operation, ch);
+  if (msg && msg.fields.deliveryTag == deliveryTag) {
+    return ch.ack(msg);
   }
 
 }
 
-function handleMessage(ch, queue, msg, operation) {
+function redeliverIfMatches(ch, deliveryTag, msg) {
+
+  if (msg && msg.fields.deliveryTag == deliveryTag) {
 
     var content = msg.content.toString();
     var exchange = msg.properties.headers['x-death'][0].exchange;
@@ -115,36 +92,21 @@ function handleMessage(ch, queue, msg, operation) {
 
     ch.ack(msg);
 
-    console.log("acked");
-  
-    if (operation == 'requeue')
-      return redeliver(content, exchange, routingkey);
-              //.then(seek.bind(undefined, tag, queue, ch));
+    return redeliver(content, exchange, routingkey);
 
-    return ch.get(queue);
-}
+  }
 
-function seek(tag, queue, operation, ch) {
-
-
- console.log('checking queue ' + queue + ' for tag ' + tag);
-
-
-if (!ch)
-	console.log("ch is undefined!");
- 
-  return ch.get(queue, {noAck: false})
-     .then(checkmsg.bind(undefined, tag, queue, ch, operation));
- 
 }
 
 	return {
+
 		peek: function(queue) {
       console.log('peeking queue ' + queue + ' on ' + amqpUri);
+      var messages = [];
 
       return amqp.connect(amqpUri)
 				.then(createChannel)
-				.then(peekChannel.bind(undefined, queue))
+				.then(iterate.bind(undefined, queue, function(msg) { if (msg) messages.push(parse(msg)); } ))
 				.then(disconnect)
 				.then(function() {
 					console.log('done fetching messages');
@@ -157,7 +119,11 @@ if (!ch)
 
 			return amqp.connect(amqpUri)
 				.then(createChannel)
-				.then(seek.bind(undefined, deliveryTag, queue, 'requeue'))
+				.then(
+          function(ch) {
+             return iterate(queue, redeliverIfMatches.bind(undefined, ch, deliveryTag), ch);
+          })
+        .delay(100)
 				.then(disconnect)
 				.then(function() {
 					console.log('done requeueing');
@@ -166,19 +132,26 @@ if (!ch)
 
 		},
     delete: function(queue, deliveryTag) {
+        
+      console.log("deleting delivery tag " + deliveryTag + " on " + queue);
+
       return amqp.connect(amqpUri)
         .then(createChannel)
-        .then(seek.bind(undefined, deliveryTag, queue, 'delete'))
+        .then(
+          function(ch) {
+             return iterate(queue, ackIfMatches.bind(undefined, ch, deliveryTag), ch);
+          })
+        .delay(100)
         .then(disconnect)
         .then(function() {
           console.log('done deleting');
           return true;
         });
     },
-    listen: function(exchange, callback) {
+    startListening: function(exchange, callback) {
       return amqp.connect(amqpUri)
           .then(createChannel)
-          .then(listenChannel.bind(undefined, exchange, callback));
+          .then(listen.bind(undefined, exchange, callback));
     }
 	};
 }());

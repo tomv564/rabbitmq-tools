@@ -39,7 +39,8 @@ app.get('/queues/:queue/items', function(req, res) {
 
   queues.peek(req.params.queue)
         .then(res.json.bind(res))
-        .catch(function(err){ res.status(404).end(); });
+        .done();
+        //.catch(function(err){ res.status(404).end(); });
 
 });
 
@@ -68,16 +69,12 @@ wss.on("connection", function(ws) {
 
   console.log(exchange);
 
-  queues.listen(exchange, function(msg) { ws.send(JSON.stringify(msg)); });
-
-  // var id = setInterval(function() {
-  //   ws.send(JSON.stringify(new Date()), function() {  });
-  // }, 1000);
+  queues.startListening(exchange, function(msg) { ws.send(JSON.stringify(msg)); });
 
   console.log("websocket connection open");
 
   ws.on("close", function() {
     console.log("websocket connection close");
-    //clearInterval(id);
+
   });
 });
