@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var express = require('express');
 var queues = require('./queues');
 var WebSocketServer = require("ws").Server;
@@ -16,7 +18,7 @@ app.disable('etag');
 app.post('/requeue', function(req, res) {
 
 	queues.requeue(req.body.from, req.body.deliveryTag)
-        .then(function(whatever) {
+        .then(function() {
 
           res.status(204).end();
 
@@ -27,7 +29,7 @@ app.post('/requeue', function(req, res) {
 app.post('/delete', function(req, res) {
 
   queues.delete(req.body.from, req.body.deliveryTag)
-        .then(function(whatever) {
+        .then(function() {
 
           res.status(204).end();
 
