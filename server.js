@@ -50,11 +50,14 @@ app.get('*', function(request, response){
   response.sendFile(__dirname + '/public/index.html');
 });
 
+// http server
 
 var server = http.createServer(app);
 server.listen(port, function() {
   console.log("Listening on port %d", port);
 });
+
+// Websocket server
 
 var wss = new WebSocketServer({server: server});
 console.log("websocket server created");
