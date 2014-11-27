@@ -87,12 +87,11 @@ function redeliverIfMatches(ch, deliveryTag, msg) {
   if (msg && msg.fields.deliveryTag == deliveryTag) {
 
     var content = msg.content.toString();
-    var exchange = msg.properties.headers['x-death'][0].exchange;
-    var routingkey = msg.properties.headers['x-death'][0]['routing-keys'][0];
+    var queue = msg.properties.headers['x-death'][0]['queue'];
 
     ch.ack(msg);
 
-    return redeliver(content, exchange, routingkey);
+    return redeliver(content, '', queue);
 
   }
 
