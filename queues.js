@@ -5,15 +5,6 @@ var when = require('when');
 
 var amqpUri = process.env.AMQP_URI || 'amqp://localhost';
 
-// handle shutdown
-// process.once('SIGINT', function() { 
-
-// 	// console.log("Disconnecting from RabbitMQ");
-// 	// conn.close();
-// 	// console.log("amqp connection closed");
-
-// });
-
 function createChannel(conn) {
   console.log("connected");
   connection = conn;

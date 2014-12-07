@@ -22,6 +22,11 @@ app.post('/requeue', function(req, res) {
 
           res.status(204).end();
 
+        })
+        .catch(function(err) {
+          console.log(err);
+          res.status(500);
+          res.json({error: err.toString()});
         });
 	
 });
@@ -33,6 +38,11 @@ app.post('/delete', function(req, res) {
 
           res.status(204).end();
 
+        })
+        .catch(function(err) {
+          console.log(err);
+          res.status(500);
+          res.json({error: err.toString()});
         });
   
 });
@@ -41,9 +51,13 @@ app.get('/queues/:queue/items', function(req, res) {
 
   queues.peek(req.params.queue)
         .then(res.json.bind(res))
+        .catch(function(err) {
+          console.log(err);
+          res.status(500);
+          res.json({error: err.toString()});
+        })
         .done();
-        //.catch(function(err){ res.status(404).end(); });
-
+      
 });
 
 app.get('*', function(request, response){
