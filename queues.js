@@ -6,7 +6,7 @@ var when = require('when');
 var amqpUri = process.env.AMQP_URI || 'amqp://localhost';
 
 // handle shutdown
-// process.once('SIGINT', function() { 
+// process.once('SIGINT', function() {
 
 // 	// console.log("Disconnecting from RabbitMQ");
 // 	// conn.close();
@@ -26,7 +26,7 @@ function createChannel(conn) {
 
 function iterate(queue, callback, ch) {
 
-  return when.iterate(function() { return ch.get(queue); }, 
+  return when.iterate(function() { return ch.get(queue); },
     function(msg) { return msg === false; },
     callback,
     undefined
@@ -48,8 +48,8 @@ function parse(msg) {
 function listen(exchange, callback, ch) {
 
   return ch.assertQueue(null, {autodelete: true})
-             .then(function(ok) { 
-                ch.bindQueue(ok.queue, exchange, '#'); 
+             .then(function(ok) {
+                ch.bindQueue(ok.queue, exchange, '#');
                 return ch.consume(ok.queue, function(msg) { callback(parse(msg));}, {noAck: true});
               });
 }
@@ -57,7 +57,7 @@ function listen(exchange, callback, ch) {
 function disconnect() {
   console.log("connection closed");
   return connection.close();
-  
+
 }
 
 function redeliver(content, exchange, routingkey) {
@@ -69,7 +69,7 @@ function redeliver(content, exchange, routingkey) {
 
 function publish(content, exchange, routingkey, ch) {
   console.log("publishing to original queue");
-  ch.publish(exchange, routingkey, new Buffer(content));
+  ch.publish(exchange, routingkey, new Buffer(content), {'deliveryMode': 2});
    return ch.close();
 }
 
@@ -159,7 +159,7 @@ function redeliverIfMatches(ch, deliveryTag, msg) {
 
 		},
     delete: function(queue, deliveryTag) {
-        
+
       console.log("deleting delivery tag " + deliveryTag + " on " + queue);
 
       return amqp.connect(amqpUri)
