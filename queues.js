@@ -5,6 +5,15 @@ var when = require('when');
 
 var amqpUri = process.env.AMQP_URI || 'amqp://localhost';
 
+// handle shutdown
+// process.once('SIGINT', function() { 
+
+// 	// console.log("Disconnecting from RabbitMQ");
+// 	// conn.close();
+// 	// console.log("amqp connection closed");
+
+// });
+
 function createChannel(conn) {
   console.log("connected");
   connection = conn;
@@ -73,6 +82,20 @@ function ackIfMatches(ch, deliveryTag, msg) {
 
 }
 
+function redeliverAll(ch, msg) {
+
+  if (msg) {
+
+    var content = msg.content.toString();
+    var queue = msg.properties.headers['x-death'][0]['queue'];
+
+    ch.ack(msg);
+
+    return redeliver(content, '', queue);
+
+  }
+}
+
 function redeliverIfMatches(ch, deliveryTag, msg) {
 
   if (msg && msg.fields.deliveryTag == deliveryTag) {
@@ -105,6 +128,20 @@ function redeliverIfMatches(ch, deliveryTag, msg) {
 				});
 
 		},
+ requeueAll: function(queue) {
+      return amqp.connect(amqpUri)
+        .then(createChannel)
+        .then(
+          function(ch) {
+             return iterate(queue, redeliverAll.bind(undefined, ch), ch);
+          })
+        .delay(100)
+        .then(disconnect)
+        .then(function() {
+          console.log('done requeueing');
+          return true;
+        });
+    },
 		requeue: function(queue, deliveryTag) {
 
 			return amqp.connect(amqpUri)

@@ -28,8 +28,8 @@ function setListen(exchange) {
 
 function reload() {
 	$.getJSON('/queues/' + currentQueue + '/items', null)
-		.fail(showError)
-		.done(showItems);
+		.done(showItems)
+		.fail(showItems.bind(undefined, null));
 }
 
 function listen() {
@@ -80,11 +80,6 @@ function showItems(data) {
 	);
 }
 
-function showError(response) {
-	console.log(response.responseJSON);
-	alert(response.responseJSON.error);
-}
-
 function itemsChanged() {
 	console.log("item operation done");
 	reload();
@@ -124,8 +119,7 @@ Dispatcher.on('requeue', function(item) {
 		data: JSON.stringify(request),
 		contentType: "application/json; charset=utf-8",
 		dataType: "json"
-	}).done(itemsChanged.bind(undefined, item.queue))
-	.fail(showError);
+	}).done(itemsChanged.bind(undefined, item.queue));
 
 });
 
@@ -146,7 +140,6 @@ Dispatcher.on('delete', function(item) {
 		data: JSON.stringify(request),
 		contentType: "application/json; charset=utf-8",
 		dataType: "json"
-	}).done(itemsChanged.bind(undefined, item.queue))
-	.fail(showError);
+	}).done(itemsChanged.bind(undefined, item.queue));
 
 });
