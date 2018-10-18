@@ -2,17 +2,16 @@ var queues = (function () {
 
     var amqp = require('amqplib');
     var when = require('when');
+    var amqpUri = process.env.AMQP_URI || 'amqp://localhost';
+
     var totalMessageCount = 0;
     var processedMessageCount = 0;
-    var amqpUri = process.env.AMQP_URI || 'amqp://localhost';
 
 // handle shutdown
 // process.once('SIGINT', function() {
-
 // 	// console.log("Disconnecting from RabbitMQ");
 // 	// conn.close();
 // 	// console.log("amqp connection closed");
-
 // });
 
     function createChannel(conn) {
@@ -22,11 +21,9 @@ var queues = (function () {
             console.log(err);
         });
         return conn.createChannel();
-
     }
 
     function iterate(queue, callback, ch) {
-
         return when.iterate(function () {
                 return ch.get(queue);
             },
@@ -36,7 +33,6 @@ var queues = (function () {
             callback,
             undefined
         );
-
     }
 
     function iterateRequeue(queue, callback, ch) {
@@ -60,14 +56,13 @@ var queues = (function () {
                 {
                     // You have reached the end of the current queue, doing a hard stop here.
                     // New messages might have been added to the iteration while iterating.
-                    // We want to prevent that the same messages get's offered over and over again.
+                    // We want to prevent that the same message get's offered over and over again.
                     console.log('Terminating, all messages where processed succesfully.');
                     console.log('During this iteration new messages ended up in the dead letter queue, they will be requeued in the next run.');
                     return true;
                 }
                 else if (msg === undefined) {
-                    // First message always seems to be undefined, continue interating.
-                    console.log('First message always seems to be undefined, continue iterating.')
+                    // First message always seems to be undefined, just continue interating.
                     return false;
                 }
                 else if (msg === false) {
