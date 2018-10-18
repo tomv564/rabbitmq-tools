@@ -47,8 +47,18 @@ var queues = (function () {
             },
             function (msg) {
 
+                if (msg === undefined) {
+                    // RabbitMQ counts from 1, this iteration from 0, first msg is always undefined.
+                    processedMessageCount++;
+                    return false;
+                }
+                else if (msg === false) {
+                    return true;
+                }
+
                 if (processedMessageCount <= totalMessageCount) {
                     // Normal flow
+                    console.log('Processing message ' + processedMessageCount + ' out of ' + totalMessageCount + '.');
                     processedMessageCount++;
                     return false;
                 }
@@ -61,15 +71,10 @@ var queues = (function () {
                     console.log('During this iteration new messages ended up in the dead letter queue, they will be requeued in the next run.');
                     return true;
                 }
-                else if (msg === undefined) {
-                    // First message always seems to be undefined, just continue interating.
-                    return false;
-                }
-                else if (msg === false) {
-                    return true;
-                }
 
-                throw new Error("Something went wrong while requeuing messages.");
+
+
+                throw new Error("Something went wrong while requeuing messages, an unforseen situation occured.");
             },
             callback,
             undefined
@@ -105,14 +110,11 @@ var queues = (function () {
     }
 
     function redeliver(content, exchange, routingkey) {
-
-        console.log("redelivering!");
         return connection.createChannel()
             .then(publish.bind(undefined, content, exchange, routingkey));
     }
 
     function publish(content, exchange, routingkey, ch) {
-        console.log("publishing to original queue");
         ch.publish(exchange, routingkey, new Buffer(content), {'deliveryMode': 2});
         return ch.close();
     }
